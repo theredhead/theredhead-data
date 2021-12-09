@@ -39,10 +39,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/theredhead/theredhead-ts-data-access.git"
+    "url": "git+https://github.com/theredhead/theredhead-data.git"
   },
   "bugs": {
-    "url": "https://github.com/theredhead/theredhead-ts-data-access/issues"
+    "url": "https://github.com/theredhead/theredhead-data/issues"
   },
-  "homepage": "https://github.com/theredhead/theredhead-ts-data-access#readme"
+  "homepage": "https://github.com/theredhead/theredhead-data#readme"
 }
