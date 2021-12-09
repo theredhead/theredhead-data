@@ -6,7 +6,10 @@ export type DbParams = PartialRecord | any[];
 
 export interface IDbConnection {
   executeScalar<T>(text: string, params: DbParams): Promise<T>;
-  executeSingle<T extends Record>(text: string, params: DbParams): Promise<T>;
+  executeSingle<T extends PartialRecord>(
+    text: string,
+    params: DbParams
+  ): Promise<T>;
   executeArray<T extends Record>(text: string, params: DbParams): Promise<T[]>;
   executeNonQuery(text: string, params: DbParams): Promise<number>;
 
@@ -22,7 +25,7 @@ export interface IDbConnection {
 
 export abstract class AbstractDbConnection implements IDbConnection {
   abstract executeScalar<T>(text: string, params: DbParams): Promise<T>;
-  abstract executeSingle<T extends Record>(
+  abstract executeSingle<T extends PartialRecord>(
     text: string,
     params: DbParams
   ): Promise<T>;

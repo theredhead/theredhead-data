@@ -5,10 +5,10 @@ import {
   AbstractDbConnection,
   DbParams,
   FetchRequest,
-} from "./../idbconnection";
+  Record,
+  FetchRequestSQLWriter,
+} from "../idbconnection";
 import * as mysql2 from "mysql2";
-import { Record } from "../idbconnection";
-import { FetchRequestSQLWriter } from "../..";
 
 export class MySqlConnection extends AbstractDbConnection {
   private readonly pool: mysql2.Pool;

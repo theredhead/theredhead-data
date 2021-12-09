@@ -15,6 +15,7 @@
   "license": "WTFPL",
   "devDependencies": {
     "@types/jasmine": "^3.6.4",
+    "@types/sqlite3": "^3.1.7",
     "jasmine": "^3.6.4",
     "nyc": "^15.1.0",
     "ts-node": "^9.1.1",
