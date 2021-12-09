@@ -1,6 +1,6 @@
 {
-  "name": "@theredhead/data-access",
-  "version": "0.0.0",
+  "name": "@theredhead/data",
+  "version": "0.0.1",
   "description": "Data Access primitives",
   "main": "dist/index.js",
   "scripts": {
