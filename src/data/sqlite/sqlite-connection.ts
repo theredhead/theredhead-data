@@ -20,22 +20,16 @@ export class SqliteConnection extends AbstractDbConnection {
   readonly quoteObjectName = (name: string): string =>
     ["`", name, "`"].join("");
 
-  async execure(
-    text: string,
-    params: DbParams = []
-  ): Promise<sqlite3.RunResult> {
+  async execute(text: string, params: DbParams = []): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.cn.run(
-        text,
-        params,
-        (result: sqlite3.RunResult, err: Error | null) => {
-          if (err) {
-            console.error(err);
-            reject(err);
-          }
-          resolve(result);
-        }
-      );
+      this.cn.serialize(() => {
+        const stmt = this.cn.prepare(text);
+        stmt.run(params);
+        stmt.all((err, rows) => {
+          if (err) reject(err);
+          resolve(rows);
+        });
+      });
     });
   }
 
@@ -44,40 +38,23 @@ export class SqliteConnection extends AbstractDbConnection {
     const key = Object.keys(row)[0];
     return row[key];
   }
+
   async executeSingle<T extends PartialRecord>(
     text: string,
     params: DbParams
   ): Promise<T> {
-    return new Promise(async (resolve, reject) => {
-      const result = await this.execure(text, params);
-      result.get((err, row) => {
-        if (err) {
-          console.error(err);
-          reject(err);
-        } else {
-          resolve(row);
-        }
-      });
-    });
+    const result = await this.execute(text, params);
+    return (<T[]>(<unknown>result))[0];
   }
   async executeArray<T extends Record>(
     text: string,
     params: DbParams
   ): Promise<T[]> {
-    return new Promise(async (resolve, reject) => {
-      const result = await this.execure(text, params);
-      result.all((err, rows) => {
-        if (err) {
-          console.error(err);
-          reject(err);
-        } else {
-          resolve(rows);
-        }
-      });
-    });
+    const result = await this.execute(text, params);
+    return result;
   }
   async executeNonQuery(text: string, params: DbParams): Promise<number> {
-    const result = await this.execure(text, params);
+    const result = await this.execute(text, params);
     return result.changes;
   }
   async tableExists(table: string): Promise<boolean> {
