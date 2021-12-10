@@ -80,8 +80,17 @@ export class SqliteConnection extends AbstractDbConnection {
     return num == 1;
   }
   async columnExists(table: string, column: string): Promise<boolean> {
-    const columns = await this.executeArray("PRAGMA table-info(?)", [table]);
-    return columns.find((c) => c["name"] == column) != null;
+    // parameter binding doesn't work wth PRAGMA so to be safe
+    // i check to see if the table asked for actually exists, which
+    // does use parameter binding
+    if (await this.tableExists(table)) {
+      const columns = await this.executeArray(
+        `PRAGMA table_info(${table})`,
+        []
+      );
+      return columns.find((c) => c["name"] == column) != null;
+    }
+    return false;
   }
   async insert<T extends PartialRecord>(table: string, record: T): Promise<T> {
     const quotedTableName = this.quoteObjectName(table);

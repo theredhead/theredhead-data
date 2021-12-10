@@ -49,8 +49,7 @@ Object.keys(implementations).forEach((implementation) => {
       try {
         await cn.executeScalar("this is not valid sql", []);
       } catch (e) {
-        console.error(e);
-        caught = true;
+        caught = e != null;
       }
       expect(caught).toBeTrue();
     });
@@ -59,8 +58,7 @@ Object.keys(implementations).forEach((implementation) => {
       try {
         await cn.executeSingle("this is not valid sql", []);
       } catch (e) {
-        console.error(e);
-        caught = true;
+        caught = e != null;
       }
       expect(caught).toBeTrue();
     });
@@ -69,8 +67,7 @@ Object.keys(implementations).forEach((implementation) => {
       try {
         await cn.executeArray("this is not valid sql", []);
       } catch (e) {
-        console.error(e);
-        caught = true;
+        caught = e != null;
       }
       expect(caught).toBeTrue();
     });
@@ -90,7 +87,7 @@ Object.keys(implementations).forEach((implementation) => {
       expect(afterDropTable).toBeFalse();
     });
 
-    it("can create a table, insert into it, select from it, and perform fetch requests on it.", async () => {
+    it("can create a table, perform various CRUD operations on it and drop it.", async () => {
       const createTableSql =
         implementation == "mysql"
           ? `
@@ -107,6 +104,9 @@ Object.keys(implementations).forEach((implementation) => {
       const countPeopleSql = "SELECT COUNT(*) FROM actor";
 
       await cn.executeNonQuery(createTableSql, []);
+
+      expect(await cn.columnExists("actor", "name")).toBeTrue();
+      expect(await cn.columnExists("actor", "surname")).toBeTrue();
 
       const actorsInANewHope = [
         {
