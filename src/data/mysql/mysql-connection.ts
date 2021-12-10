@@ -52,12 +52,12 @@ export class MySqlConnection extends AbstractDbConnection {
         }
 
         cn.query(text, params, (err, rows, fields) => {
-          try {
-            if (err) {
-              reject(err);
-              return;
-            }
+          if (err) {
+            reject(err);
+            return;
+          }
 
+          try {
             const result = <MySqlResult<T>>(<unknown>{
               info: {},
               fields,

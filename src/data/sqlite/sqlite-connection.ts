@@ -21,7 +21,9 @@ export class SqliteConnection extends AbstractDbConnection {
   async execute(text: string, params: DbParams = []): Promise<any> {
     return new Promise((resolve, reject) => {
       this.cn.serialize(() => {
-        const stmt = this.cn.prepare(text, params);
+        const stmt = this.cn.prepare(text, params, function (err) {
+          if (err) reject(err);
+        });
         stmt.all((err, rows) => {
           if (err) reject(err);
           resolve(rows);
@@ -33,11 +35,14 @@ export class SqliteConnection extends AbstractDbConnection {
   async run(text: string, params: DbParams = []): Promise<sqlite3.RunResult> {
     return new Promise((resolve, reject) => {
       this.cn.serialize(() => {
-        const stmt = this.cn.prepare(text, params);
+        const stmt = this.cn.prepare(text, params, function (err) {
+          // syntax errors
+          if (err) reject(err);
+        });
         stmt.run(params, function (err) {
+          // execution errors
           if (err) reject(err);
           resolve(<sqlite3.RunResult>(<unknown>this));
-          reject();
         });
       });
     });
@@ -90,10 +95,6 @@ export class SqliteConnection extends AbstractDbConnection {
 
     const statement = `INSERT INTO ${quotedTableName} (${columns}) VALUES (${tokens})`;
     const result = await this.run(statement, values);
-
-    if (!result.lastID) {
-      throw new Error("No rowid was generated on insert");
-    }
 
     const inserted = await this.executeSingle<T>(
       `SELECT * FROM ${quotedTableName} WHERE rowid=?`,

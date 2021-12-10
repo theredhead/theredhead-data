@@ -34,6 +34,47 @@ Object.keys(implementations).forEach((implementation) => {
       }
     });
 
+    it("executeNonQuery will throw on invalid sql", async () => {
+      let caught = false;
+      try {
+        await cn.executeNonQuery("this is not valid sql", []);
+      } catch (e) {
+        console.error(e);
+        caught = true;
+      }
+      expect(caught).toBeTrue();
+    });
+    it("executeScalar will throw on invalid sql", async () => {
+      let caught = false;
+      try {
+        await cn.executeScalar("this is not valid sql", []);
+      } catch (e) {
+        console.error(e);
+        caught = true;
+      }
+      expect(caught).toBeTrue();
+    });
+    it("executeSingle will throw on invalid sql", async () => {
+      let caught = false;
+      try {
+        await cn.executeSingle("this is not valid sql", []);
+      } catch (e) {
+        console.error(e);
+        caught = true;
+      }
+      expect(caught).toBeTrue();
+    });
+    it("executeArray will throw on invalid sql", async () => {
+      let caught = false;
+      try {
+        await cn.executeArray("this is not valid sql", []);
+      } catch (e) {
+        console.error(e);
+        caught = true;
+      }
+      expect(caught).toBeTrue();
+    });
+
     it("can create and drop a table", async () => {
       const createTableSql = "CREATE TABLE test (id int not null)";
       const dropTableSql = "DROP TABLE test";
