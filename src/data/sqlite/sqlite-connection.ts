@@ -4,9 +4,7 @@ import {
   PartialRecord,
   AbstractDbConnection,
   DbParams,
-  FetchRequest,
   Record,
-  FetchRequestSQLWriter,
 } from "../idbconnection";
 import * as sqlite3 from "sqlite3";
 
@@ -23,11 +21,23 @@ export class SqliteConnection extends AbstractDbConnection {
   async execute(text: string, params: DbParams = []): Promise<any> {
     return new Promise((resolve, reject) => {
       this.cn.serialize(() => {
-        const stmt = this.cn.prepare(text);
-        stmt.run(params);
+        const stmt = this.cn.prepare(text, params);
         stmt.all((err, rows) => {
           if (err) reject(err);
           resolve(rows);
+        });
+      });
+    });
+  }
+
+  async run(text: string, params: DbParams = []): Promise<sqlite3.RunResult> {
+    return new Promise((resolve, reject) => {
+      this.cn.serialize(() => {
+        const stmt = this.cn.prepare(text, params);
+        stmt.run(params, function (err) {
+          if (err) reject(err);
+          resolve(<sqlite3.RunResult>(<unknown>this));
+          reject();
         });
       });
     });
@@ -54,14 +64,15 @@ export class SqliteConnection extends AbstractDbConnection {
     return result;
   }
   async executeNonQuery(text: string, params: DbParams): Promise<number> {
-    const result = await this.execute(text, params);
-    return result.changes;
+    const result = await this.run(text, params);
+    return result?.changes ?? 0;
   }
   async tableExists(table: string): Promise<boolean> {
-    return this.executeScalar(
+    const num = await this.executeScalar(
       "SELECT COUNT(1) FROM sqlite_master WHERE type=? AND name=?",
       ["table", table]
     );
+    return num == 1;
   }
   async columnExists(table: string, column: string): Promise<boolean> {
     const columns = await this.executeArray("PRAGMA table-info(?)", [table]);
@@ -77,15 +88,19 @@ export class SqliteConnection extends AbstractDbConnection {
       .join(", ");
     const values = Object.keys(data).map((key) => data[key]);
 
-    const statement = `INSERT INTO ${quotedTableName} (${columns}) VALUES (${tokens}); SELECT LAST_INSERT_ID()`;
-    const insertId = await this.executeScalar<number>(statement, values);
+    const statement = `INSERT INTO ${quotedTableName} (${columns}) VALUES (${tokens})`;
+    const result = await this.run(statement, values);
+
+    if (!result.lastID) {
+      throw new Error("No rowid was generated on insert");
+    }
 
     const inserted = await this.executeSingle<T>(
-      `SELECT * FROM ${quotedTableName} WHERE id=?`,
-      [insertId]
+      `SELECT * FROM ${quotedTableName} WHERE rowid=?`,
+      [result.lastID]
     );
 
-    return { id: insertId, ...inserted };
+    return inserted;
   }
   async update<T extends Record>(table: string, record: Record): Promise<T> {
     const id = record.id;
@@ -112,11 +127,5 @@ export class SqliteConnection extends AbstractDbConnection {
       id,
     ]);
     return record;
-  }
-
-  async fetch<T extends Record>(request: FetchRequest): Promise<T[]> {
-    const writer = new FetchRequestSQLWriter();
-    const command = writer.write(request);
-    return await this.executeArray<T>(command.text, command.params);
   }
 }

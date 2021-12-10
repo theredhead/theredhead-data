@@ -1,9 +1,22 @@
 /** @format */
 
-export type PartialRecord = { [name: string]: any };
-export type Record = { id: number | string; [name: string]: any };
+/**
+ * Represents some row of data that may or may not have an id yet
+ */
+export type PartialRecord = { [field: string]: any };
+
+/**
+ * Represents some row of date that has an id
+ */
+export type Record = { id: number | string; [field: string]: any };
 export type DbParams = PartialRecord | any[];
 
+/**
+ * Provides the minimum API for a database to be useful
+ *
+ * @export
+ * @interface IDbConnection
+ */
 export interface IDbConnection {
   executeScalar<T>(text: string, params: DbParams): Promise<T>;
   executeSingle<T extends PartialRecord>(
@@ -21,8 +34,12 @@ export interface IDbConnection {
   delete<T extends Record>(table: string, id: number): Promise<T>;
 
   fetch<T extends Record>(request: FetchRequest): Promise<T[]>;
+  from(table: string): FetchRequestBuilder;
 }
-
+/**
+ * AbstractDbConnection provides a base to extend for any particular
+ * database system
+ */
 export abstract class AbstractDbConnection implements IDbConnection {
   abstract executeScalar<T>(text: string, params: DbParams): Promise<T>;
   abstract executeSingle<T extends PartialRecord>(
@@ -42,7 +59,11 @@ export abstract class AbstractDbConnection implements IDbConnection {
   abstract update<T extends Record>(table: string, obj: T): Promise<T>;
   abstract delete<T extends Record>(table: string, id: number): Promise<T>;
 
-  abstract fetch<T extends Record>(request: FetchRequest): Promise<T[]>;
+  async fetch<T extends Record>(request: FetchRequest): Promise<T[]> {
+    const writer = new FetchRequestSQLWriter();
+    const command = writer.write(request);
+    return await this.executeArray<T>(command.text, command.params);
+  }
 
   from(table: string): FetchRequestBuilder {
     return new FetchRequestBuilder(this, table);
@@ -145,7 +166,7 @@ export class FetchRequestSQLWriter {
     clause: FetchSimplePredicteClause,
     params: any[]
   ): string {
-    params.push(clause.params);
+    params.push(...clause.params);
     return `(${clause.text})`;
   }
   expandCompoundPredicateClause(

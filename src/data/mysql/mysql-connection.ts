@@ -4,9 +4,7 @@ import {
   PartialRecord,
   AbstractDbConnection,
   DbParams,
-  FetchRequest,
   Record,
-  FetchRequestSQLWriter,
 } from "../idbconnection";
 import * as mysql2 from "mysql2";
 
@@ -50,14 +48,12 @@ export class MySqlConnection extends AbstractDbConnection {
     return new Promise((resolve, reject) => {
       this.pool.getConnection((cnErr, cn) => {
         if (cnErr) {
-          console.error("Connection:", cnErr);
           reject(cnErr);
         }
 
         cn.query(text, params, (err, rows, fields) => {
           try {
             if (err) {
-              console.error("Query:", err);
               reject(err);
               return;
             }
@@ -93,9 +89,9 @@ export class MySqlConnection extends AbstractDbConnection {
   }
 
   async executeScalar<T>(statement: string, args: DbParams = []): Promise<T> {
-    const result = await this.executeSingle(statement, args);
-    const key = Object.keys(result)[0];
-    const scalar = (<any>result)[key];
+    const single = await this.executeSingle(statement, args);
+    const key = Object.keys(single)[0];
+    const scalar = (<any>single)[key];
     return <T>(<unknown>scalar);
   }
   async executeSingle<T extends PartialRecord>(
@@ -103,8 +99,9 @@ export class MySqlConnection extends AbstractDbConnection {
     params: DbParams = []
   ): Promise<T> {
     const result = await (await this.execute(text, params)).rows;
-    if (result.length != 1)
+    if (result.length != 1) {
       throw new Error(`ExecuteSingle got ${result.length} records.`);
+    }
 
     return <T>(<unknown>result[0]);
   }
@@ -151,8 +148,11 @@ export class MySqlConnection extends AbstractDbConnection {
     const values = Object.keys(data).map((key) => data[key]);
 
     const statement = `INSERT INTO ${quotedTableName} (${columns}) VALUES (${tokens}); SELECT LAST_INSERT_ID()`;
-    const insertId = await this.executeScalar<number>(statement, values);
 
+    const insertId = (await this.execute<any>(statement, values)).info
+      .insertId!;
+
+    // const insertId = await this.executeScalar<number>(statement, values);
     const inserted = await this.executeSingle<T>(
       `SELECT * FROM ${quotedTableName} WHERE id=?`,
       [insertId]
@@ -185,12 +185,6 @@ export class MySqlConnection extends AbstractDbConnection {
       id,
     ]);
     return record;
-  }
-
-  async fetch<T extends Record>(request: FetchRequest): Promise<T[]> {
-    const writer = new FetchRequestSQLWriter();
-    const command = writer.write(request);
-    return await this.executeArray<T>(command.text, command.params);
   }
 }
 
