@@ -4,13 +4,30 @@
 
 This package provides interfaces for use with @theredhead/data-access-mysql and @theredhead/data-access-sqlite
 
-Theinteresting bits:
+### basic usage
+
+```typescript
+
+const db = new MySqlDatabase(config);
+
+const data = await db.from('people')
+  .where('surname = ?', 'Hamill')
+  .where('name = ?', 'Mark')
+  .orderBy('surname', 'DESC')
+  .fetch();
+
+```
+
+The more interesting bits:
 
 ```typescript
 
 export interface IDbConnection {
   executeScalar<T>(text: string, params: DbParams): Promise<T>;
-  executeSingle<T extends PartialRecord>(text: string, params: DbParams): Promise<T>;
+  executeSingle<T extends PartialRecord>(
+    text: string,
+    params: DbParams
+  ): Promise<T>;
   executeArray<T extends Record>(text: string, params: DbParams): Promise<T[]>;
   executeNonQuery(text: string, params: DbParams): Promise<number>;
 
@@ -22,6 +39,7 @@ export interface IDbConnection {
   delete<T extends Record>(table: string, id: number): Promise<T>;
 
   fetch<T extends Record>(request: FetchRequest): Promise<T[]>;
+  from(table: string): FetchRequestBuilder;
 }
 
 ```

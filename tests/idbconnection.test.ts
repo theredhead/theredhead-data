@@ -1,9 +1,6 @@
 /** @format */
 
-import {
-  AbstractDbConnection,
-  PartialRecord,
-} from "./../src/data/idbconnection";
+import { PartialRecord } from "./../src/data/idbconnection";
 import { IDbConnection } from "./../src/data/idbconnection";
 import { SqliteConnection } from "./../src/data/sqlite/sqlite-connection";
 import { MySqlConnection } from "./../src/data/mysql/mysql-connection";
@@ -108,10 +105,10 @@ Object.keys(implementations).forEach((implementation) => {
       expect(selected.length).toBe(actorsInANewHope.length);
 
       // bonus...
-      const notMarkHamill = await (<AbstractDbConnection>cn)
+      const notMarkHamill = await cn
         .from("actor")
-        .where("name <> ?", ["Mark"])
-        .where("surname <> ?", ["Hamill"])
+        .where("name <> ?", "Mark")
+        .where("surname <> ?", "Hamill")
         .orderBy("surname", "ASC")
         .fetch();
 

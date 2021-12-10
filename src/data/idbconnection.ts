@@ -108,7 +108,7 @@ export class FetchRequestBuilder implements FetchRequest {
     this.table = table;
   }
 
-  where(text: string, params: any[] = []) {
+  where(text: string, ...params: any[]) {
     this.predicates.push({
       text,
       params,
