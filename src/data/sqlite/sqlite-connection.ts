@@ -121,10 +121,10 @@ export class SqliteConnection extends AbstractDbConnection {
   async delete<T extends Record>(table: string, id: number): Promise<T> {
     const quotedTableName = this.quoteObjectName(table);
     const record = await this.executeSingle<T>(
-      `SELECT * FROM ${quotedTableName} WHERE id=?`,
+      `SELECT * FROM ${quotedTableName} WHERE rowid=?`,
       [id]
     );
-    await this.executeNonQuery(`DELETE FROM ${quotedTableName} WHERE id=?`, [
+    await this.executeNonQuery(`DELETE FROM ${quotedTableName} WHERE rowid=?`, [
       id,
     ]);
     return record;

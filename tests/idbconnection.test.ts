@@ -110,6 +110,10 @@ Object.keys(implementations).forEach((implementation) => {
 
       const actorsInANewHope = [
         {
+          name: "John",
+          surname: "Doe",
+        },
+        {
           name: "Mark",
           surname: "Hamill",
         },
@@ -139,11 +143,30 @@ Object.keys(implementations).forEach((implementation) => {
         await cn.insert("actor", actor);
       }
 
-      const count = await cn.executeScalar<number>(countPeopleSql, []);
-      expect(count).toBe(actorsInANewHope.length);
+      const selectByNameAndSurname =
+        implementation == "sqlite"
+          ? "SELECT rowid as id, * FROM actor WHERE name=? AND surname=?"
+          : "SELECT * FROM actor WHERE name=? AND surname=?";
+      const johnDoeInTable = await cn.executeSingle(selectByNameAndSurname, [
+        "John",
+        "Doe",
+      ]);
+
+      expect(await cn.executeScalar<number>(countPeopleSql, [])).toBe(
+        actorsInANewHope.length
+      );
+
+      expect(johnDoeInTable.id).toBe(1);
+      expect(johnDoeInTable.name).toBe("John");
+      expect(johnDoeInTable.surname).toBe("Doe");
+      await cn.delete("actor", johnDoeInTable.id);
+
+      expect(await cn.executeScalar<number>(countPeopleSql, [])).toBe(
+        actorsInANewHope.length - 1
+      );
 
       const selected = await cn.executeArray<any>("SELECT * FROM actor", []);
-      expect(selected.length).toBe(actorsInANewHope.length);
+      expect(selected.length).toBe(actorsInANewHope.length - 1);
 
       // bonus...
       const notMarkHamill = await cn
@@ -153,7 +176,7 @@ Object.keys(implementations).forEach((implementation) => {
         .orderBy("surname", "ASC")
         .fetch();
 
-      expect(notMarkHamill.length).toBe(actorsInANewHope.length - 1);
+      expect(notMarkHamill.length).toBe(actorsInANewHope.length - 2);
       await cn.executeNonQuery("DROP TABLE actor", []);
     });
   });
