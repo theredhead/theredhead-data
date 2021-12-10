@@ -190,5 +190,10 @@ Object.keys(implementations).forEach((implementation) => {
       expect(notMarkHamill.length).toBe(actorsInANewHope.length - 2);
       await cn.executeNonQuery("DROP TABLE actor", []);
     });
+
+    it("can tell me that a column doesn't exist", async () => {
+      const nope = await cn.columnExists("no_such_table", "no_such_column");
+      expect(nope).toBeFalse();
+    });
   });
 });
