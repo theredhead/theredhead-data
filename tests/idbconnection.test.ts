@@ -1,6 +1,6 @@
 /** @format */
 
-import { PartialRecord } from "./../src/data/idbconnection";
+import { PartialRecord, Record } from "./../src/data/idbconnection";
 import { IDbConnection } from "./../src/data/idbconnection";
 import { SqliteConnection } from "./../src/data/sqlite/sqlite-connection";
 import { MySqlConnection } from "./../src/data/mysql/mysql-connection";
@@ -142,24 +142,35 @@ Object.keys(implementations).forEach((implementation) => {
       for (let actor of actorsInANewHope) {
         await cn.insert("actor", actor);
       }
+      expect(await cn.executeScalar<number>(countPeopleSql, [])).toBe(
+        actorsInANewHope.length
+      );
 
       const selectByNameAndSurname =
         implementation == "sqlite"
           ? "SELECT rowid as id, * FROM actor WHERE name=? AND surname=?"
           : "SELECT * FROM actor WHERE name=? AND surname=?";
-      const johnDoeInTable = await cn.executeSingle(selectByNameAndSurname, [
-        "John",
-        "Doe",
-      ]);
-
-      expect(await cn.executeScalar<number>(countPeopleSql, [])).toBe(
-        actorsInANewHope.length
+      const johnDoeInTable = await cn.executeSingle<Record>(
+        selectByNameAndSurname,
+        ["John", "Doe"]
       );
 
       expect(johnDoeInTable.id).toBe(1);
       expect(johnDoeInTable.name).toBe("John");
       expect(johnDoeInTable.surname).toBe("Doe");
-      await cn.delete("actor", johnDoeInTable.id);
+
+      // after the gender transition
+      johnDoeInTable.name = "Jane";
+      await cn.update("actor", johnDoeInTable);
+      const janeDoeInTable = await cn.executeSingle<Record>(
+        selectByNameAndSurname,
+        ["Jane", "Doe"]
+      );
+      expect(janeDoeInTable.id).toBe(1);
+      expect(janeDoeInTable.name).toBe("Jane");
+      expect(janeDoeInTable.surname).toBe("Doe");
+
+      await cn.delete("actor", janeDoeInTable.id);
 
       expect(await cn.executeScalar<number>(countPeopleSql, [])).toBe(
         actorsInANewHope.length - 1

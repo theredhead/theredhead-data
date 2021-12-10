@@ -8,7 +8,7 @@ export type PartialRecord = { [field: string]: any };
 /**
  * Represents some row of date that has an id
  */
-export type Record = { id: number | string; [field: string]: any };
+export type Record = { id: number; [field: string]: any };
 export type DbParams = PartialRecord | any[];
 
 /**

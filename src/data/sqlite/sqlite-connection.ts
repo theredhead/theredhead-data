@@ -120,10 +120,10 @@ export class SqliteConnection extends AbstractDbConnection {
     const snippets = Object.keys(data)
       .map((col) => [this.quoteObjectName(col), "=?"].join(""))
       .join(", ");
-    const statement = `UPDATE ${quotedTableName} SET ${snippets} WHERE id=?`;
+    const statement = `UPDATE ${quotedTableName} SET ${snippets} WHERE rowid=?`;
     await this.executeNonQuery(statement, [...Object.values(data), id]);
     return await this.executeSingle<T>(
-      `SELECT * FROM ${quotedTableName} WHERE id=?`,
+      `SELECT * FROM ${quotedTableName} WHERE rowid=?`,
       [id]
     );
   }
