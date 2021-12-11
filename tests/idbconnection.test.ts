@@ -20,11 +20,12 @@ Object.keys(implementations).forEach((implementation) => {
 
   describe(`The ${implementation} implementation IDbConnection`, () => {
     it("can select the current date", async () => {
+      // these should be basically the same date
       const date = await cn.executeScalar<Date>("SELECT CURRENT_TIMESTAMP", []);
-      // mysql actually selects a Date, sqlite doesn't...
       const dateObj = new Date(String(date));
-
-      expect(dateObj.getUTCDate()).toBeCloseTo(new Date().getUTCDate());
+      // this may still fail depending on timezone differences settings.
+      // assuming the database is following UTC best-practice though.
+      expect(dateObj.getDate()).toBeCloseTo(new Date().getUTCDate());
     });
 
     it("can perform 100 queries without crashing", async () => {
@@ -44,6 +45,13 @@ Object.keys(implementations).forEach((implementation) => {
       }
       expect(caught).toBeTrue();
     });
+    it("executeScalar will return null on division by zero", async () => {
+      expect(async () => {
+        const wrong = await cn.executeScalar("SELECT 1 / ?", [0]);
+        expect(wrong).toBeNull();
+      }).not.toThrow();
+    });
+
     it("executeScalar will throw on invalid sql", async () => {
       let caught = false;
       try {

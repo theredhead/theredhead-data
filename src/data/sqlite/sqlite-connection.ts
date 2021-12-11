@@ -18,7 +18,7 @@ export class SqliteConnection extends AbstractDbConnection {
   readonly quoteObjectName = (name: string): string =>
     ["`", name, "`"].join("");
 
-  async execute(text: string, params: DbParams = []): Promise<any> {
+  async query(text: string, params: DbParams = []): Promise<any> {
     return new Promise((resolve, reject) => {
       this.cn.serialize(() => {
         const stmt = this.cn.prepare(text, params, function (err) {
@@ -58,14 +58,14 @@ export class SqliteConnection extends AbstractDbConnection {
     text: string,
     params: DbParams
   ): Promise<T> {
-    const result = await this.execute(text, params);
+    const result = await this.query(text, params);
     return (<T[]>(<unknown>result))[0];
   }
   async executeArray<T extends Record>(
     text: string,
     params: DbParams
   ): Promise<T[]> {
-    const result = await this.execute(text, params);
+    const result = await this.query(text, params);
     return result;
   }
   async executeNonQuery(text: string, params: DbParams): Promise<number> {

@@ -115,6 +115,31 @@ export class FetchRequestBuilder implements FetchRequest {
     });
     return this;
   }
+
+  whereAnd(...predicates: PredicateShorthand[]) {
+    const compoundPredicate: FetchCompoundPredicteClause = {
+      type: "AND",
+      predicates: predicates.map((p) => ({
+        text: p.shift(),
+        params: p,
+      })),
+    };
+    this.predicates.push(compoundPredicate);
+    return this;
+  }
+
+  whereOr(...predicates: PredicateShorthand[]) {
+    const compoundPredicate: FetchCompoundPredicteClause = {
+      type: "OR",
+      predicates: predicates.map((p) => ({
+        text: p.shift(),
+        params: p,
+      })),
+    };
+    this.predicates.push(compoundPredicate);
+    return this;
+  }
+
   orderBy(column: string, direction: "ASC" | "DESC") {
     this.sort.push({
       column,
@@ -126,6 +151,8 @@ export class FetchRequestBuilder implements FetchRequest {
     return this.connection.fetch(this);
   }
 }
+
+type PredicateShorthand = [text: string, ...params: any[]];
 
 // const db: AbstractDbConnection = <AbstractDbConnection>{};
 // db.from("users").where("name = ?", ["Harry"]).orderBy("age", "DESC").fetch();

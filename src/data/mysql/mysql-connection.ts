@@ -49,43 +49,39 @@ export class MySqlConnection extends AbstractDbConnection {
       this.pool.getConnection((cnErr, cn) => {
         if (cnErr) {
           reject(cnErr);
+        } else {
+          cn.query(text, params, (err, rows, fields) => {
+            if (err) {
+              reject(err);
+              return;
+            }
+
+            try {
+              const result = <MySqlResult<T>>(<unknown>{
+                info: {},
+                fields,
+                rows: [],
+              });
+
+              if (this.isResultSetHeader(rows)) {
+                result.info = <any>{ ...rows };
+                rows = [];
+              } else if (this.isResultSetHeader((<any[]>rows)[0])) {
+                result.info = (<any[]>rows).shift();
+              }
+              if ((<any[]>rows)?.length) {
+                result.rows = <any>rows;
+              }
+              resolve(result);
+            } catch (throwable) {
+              reject(throwable);
+            } finally {
+              cn.release();
+            }
+          });
         }
-
-        cn.query(text, params, (err, rows, fields) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-
-          try {
-            const result = <MySqlResult<T>>(<unknown>{
-              info: {},
-              fields,
-              rows: [],
-            });
-
-            if (this.isResultSetHeader(rows)) {
-              result.info = <any>{ ...rows };
-              rows = [];
-            } else if (this.isResultSetHeader((<any[]>rows)[0])) {
-              result.info = (<any[]>rows).shift();
-            }
-            if ((<any[]>rows)?.length) {
-              result.rows = <any>rows;
-            }
-            resolve(result);
-          } catch (throwable) {
-            reject(throwable);
-          } finally {
-            cn.release();
-          }
-        });
-        // this.pool.releaseConnection(cn);
       });
     });
-  }
-  release(): void {
-    (<any>this.pool) = null;
   }
 
   async executeScalar<T>(statement: string, args: DbParams = []): Promise<T> {

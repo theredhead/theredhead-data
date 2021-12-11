@@ -85,7 +85,7 @@ Object.keys(implementations).forEach((implementation) => {
       expect(actors.length).toBe(initialListOfActors.length);
     });
 
-    it(`can suppurts compound predicates (${implementation})`, async () => {
+    it(`requests are basic JSON (${implementation})`, async () => {
       const request: FetchRequest = {
         table: tableName,
         sort: [],
@@ -109,6 +109,30 @@ Object.keys(implementations).forEach((implementation) => {
       const anakinsChildren = await cn.fetch(request);
 
       expect(anakinsChildren.length).toBe(2);
+    });
+
+    it("works with simple builder syntax #1", async () => {
+      const childrenAndDroids = await cn
+        .from(tableName)
+        .whereOr(
+          ["role = ?", "Luke Skywalker"],
+          ["name = ?", "Carrie"],
+          ["role IN(?, ?)", "R2-D2", "C3PO"]
+        )
+        .fetch();
+      expect(childrenAndDroids.length).toBe(4);
+    });
+
+    it("works with simple builder syntax #2", async () => {
+      const marks = await cn
+        .from(tableName)
+        .whereAnd(
+          ["role = ?", "Luke Skywalker"],
+          ["name = ?", "Mark"],
+          ["surname = ?", "Hamill"]
+        )
+        .fetch();
+      expect(marks.length).toBe(1);
     });
   });
 });
