@@ -9,6 +9,8 @@ import {
 import * as mysql2 from "mysql2";
 
 export class MySqlConnection extends AbstractDbConnection {
+  rowIdColumn = "rowid";
+
   private readonly pool: mysql2.Pool;
   constructor(private config: any) {
     super();
@@ -136,7 +138,7 @@ export class MySqlConnection extends AbstractDbConnection {
   async insert<T extends PartialRecord>(table: string, record: T): Promise<T> {
     const quotedTableName = this.quoteObjectName(table);
     const data: any = { ...record };
-    delete data.id;
+    delete data[this.rowIdColumn];
     const columns = Object.keys(data).map(this.quoteObjectName).join(", ");
     const tokens = Object.keys(data)
       .map(() => "?")
@@ -150,36 +152,37 @@ export class MySqlConnection extends AbstractDbConnection {
 
     // const insertId = await this.executeScalar<number>(statement, values);
     const inserted = await this.executeSingle<T>(
-      `SELECT * FROM ${quotedTableName} WHERE id=?`,
+      `SELECT * FROM ${quotedTableName} WHERE ${this.rowIdColumn}=?`,
       [insertId]
     );
 
-    return { id: insertId, ...inserted };
+    return { [this.rowIdColumn]: insertId, ...inserted };
   }
   async update<T extends Record>(table: string, record: Record): Promise<T> {
-    const id = record.id;
+    const id = record[this.rowIdColumn];
     const data: PartialRecord = { ...record };
-    delete data.id;
+    delete data[this.rowIdColumn];
     const quotedTableName = this.quoteObjectName(table);
     const snippets = Object.keys(data)
       .map((col) => [this.quoteObjectName(col), "=?"].join(""))
       .join(", ");
-    const statement = `UPDATE ${quotedTableName} SET ${snippets} WHERE id=?`;
+    const statement = `UPDATE ${quotedTableName} SET ${snippets} WHERE ${this.rowIdColumn}=?`;
     await this.executeNonQuery(statement, [...Object.values(data), id]);
     return await this.executeSingle<T>(
-      `SELECT * FROM ${quotedTableName} WHERE id=?`,
+      `SELECT * FROM ${quotedTableName} WHERE ${this.rowIdColumn}=?`,
       [id]
     );
   }
   async delete<T extends Record>(table: string, id: number): Promise<T> {
     const quotedTableName = this.quoteObjectName(table);
     const record = await this.executeSingle<T>(
-      `SELECT * FROM ${quotedTableName} WHERE id=?`,
+      `SELECT * FROM ${quotedTableName} WHERE ${this.rowIdColumn}=?`,
       [id]
     );
-    await this.executeNonQuery(`DELETE FROM ${quotedTableName} WHERE id=?`, [
-      id,
-    ]);
+    await this.executeNonQuery(
+      `DELETE FROM ${quotedTableName} WHERE ${this.rowIdColumn}=?`,
+      [id]
+    );
     return record;
   }
 }

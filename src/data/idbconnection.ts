@@ -8,7 +8,7 @@ export type PartialRecord = { [field: string]: any };
 /**
  * Represents some row of date that has an id
  */
-export type Record = { id: number; [field: string]: any };
+export type Record = { rowid: number; [field: string]: any };
 export type DbParams = PartialRecord | any[];
 
 /**
@@ -74,6 +74,8 @@ export interface FetchRequest {
   table: string;
   predicates: FetchPredicte;
   sort: Sort;
+  pageIndex?: number;
+  pageSize?: number;
 }
 
 export interface FetchSimplePredicteClause {
@@ -103,6 +105,8 @@ export class FetchRequestBuilder implements FetchRequest {
   table: string;
   predicates: FetchPredicte = [];
   sort: Sort = [];
+  pageIndex?: number;
+  pageSize?: number;
 
   constructor(private connection: IDbConnection, table: string) {
     this.table = table;
@@ -147,6 +151,12 @@ export class FetchRequestBuilder implements FetchRequest {
     });
     return this;
   }
+
+  page(pageIndex: number, pageSize: number) {
+    this.pageIndex = pageIndex;
+    this.pageSize = pageSize;
+    return this;
+  }
   fetch(): Promise<Record[]> {
     return this.connection.fetch(this);
   }
@@ -160,21 +170,31 @@ type PredicateShorthand = [text: string, ...params: any[]];
 export type FetchCommand = { text: string; params: any[] };
 
 export class FetchRequestSQLWriter {
+  columns = "*";
   write(request: FetchRequest): FetchCommand {
     const params: any[] = [];
     const text = [
-      "SELECT * ",
+      "SELECT ",
+      this.columns,
+      " ",
       "FROM " + request.table,
       request.predicates.length > 0 ? "WHERE" : null,
       request.predicates
         .map((p) => this.expandPredicate(p, params))
         .join(" AND "),
       request.sort.length > 0 ? this.expandSort(request.sort) : null,
+      request.pageIndex && request.pageSize
+        ? this.limitClause(request.pageIndex, request.pageSize)
+        : null,
     ]
       .filter((o) => o != null)
       .join("\n");
 
     return { text, params };
+  }
+  limitClause(pageIndex: number, pageSize: number): string {
+    const offset = pageIndex * pageSize;
+    return `LIMIT ${offset}, ${pageSize}`;
   }
   expandPredicate(clause: FetchPredicteClause, params: any[]): string {
     if (clause.hasOwnProperty("type")) {

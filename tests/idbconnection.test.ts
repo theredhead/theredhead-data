@@ -100,7 +100,7 @@ Object.keys(implementations).forEach((implementation) => {
         implementation == "mysql"
           ? `
           CREATE TABLE actor (
-            id int not null primary key auto_increment,
+            rowid int not null primary key auto_increment,
             name varchar(255),
             surname varchar(255)
           )`
@@ -156,14 +156,14 @@ Object.keys(implementations).forEach((implementation) => {
 
       const selectByNameAndSurname =
         implementation == "sqlite"
-          ? "SELECT rowid as id, * FROM actor WHERE name=? AND surname=?"
+          ? "SELECT rowid, * FROM actor WHERE name=? AND surname=?"
           : "SELECT * FROM actor WHERE name=? AND surname=?";
       const johnDoeInTable = await cn.executeSingle<Record>(
         selectByNameAndSurname,
         ["John", "Doe"]
       );
 
-      expect(johnDoeInTable.id).toBe(1);
+      expect(johnDoeInTable.rowid).toBe(1);
       expect(johnDoeInTable.name).toBe("John");
       expect(johnDoeInTable.surname).toBe("Doe");
 
@@ -174,11 +174,11 @@ Object.keys(implementations).forEach((implementation) => {
         selectByNameAndSurname,
         ["Jane", "Doe"]
       );
-      expect(janeDoeInTable.id).toBe(1);
+      expect(janeDoeInTable.rowid).toBe(1);
       expect(janeDoeInTable.name).toBe("Jane");
       expect(janeDoeInTable.surname).toBe("Doe");
 
-      await cn.delete("actor", janeDoeInTable.id);
+      await cn.delete("actor", janeDoeInTable.rowid);
 
       expect(await cn.executeScalar<number>(countPeopleSql, [])).toBe(
         actorsInANewHope.length - 1

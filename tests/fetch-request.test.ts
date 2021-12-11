@@ -38,6 +38,41 @@ const initialListOfActors = [
     surname: "Ford",
     role: "Han Solo",
   },
+  {
+    name: "Alec",
+    surname: "Guinness",
+    role: "Obi-wan Kenobi",
+  },
+  {
+    name: "Hayden",
+    surname: "Christensen",
+    role: "Anakin Skywalker",
+  },
+  {
+    name: "Ewan",
+    surname: "McGregor",
+    role: "Obi-wan Kenobi",
+  },
+  {
+    name: "Daisy",
+    surname: "Ridley",
+    role: "Rey",
+  },
+  {
+    name: "John",
+    surname: "Boyega",
+    role: "Finn",
+  },
+  {
+    name: "Adam",
+    surname: "Driver",
+    role: "Kylo Ren",
+  },
+  {
+    name: "Andy",
+    surname: "Serkis",
+    role: "Snoke",
+  },
 ];
 
 const implementations: PartialRecord = {
@@ -60,7 +95,7 @@ Object.keys(implementations).forEach((implementation) => {
         implementation == "mysql"
           ? `
             CREATE TABLE ${tableName} (
-              id int not null primary key auto_increment,
+              rowid int not null primary key auto_increment,
               name varchar(255),
               surname varchar(255),
               role varchar(255)
@@ -133,6 +168,26 @@ Object.keys(implementations).forEach((implementation) => {
         )
         .fetch();
       expect(marks.length).toBe(1);
+    });
+
+    it("can do paging", async () => {
+      const pageSize = 5;
+      const numberOfPages = Math.ceil(initialListOfActors.length / pageSize);
+      for (let pageIx = 0; pageIx < numberOfPages; pageIx++) {
+        const page2 = await cn.from(tableName).page(1, 5).fetch();
+        expect(page2.length).toBeLessThanOrEqual(pageSize);
+      }
+    });
+
+    it("includes rowid", async () => {
+      const obiwans = await cn
+        .from(tableName)
+        .where("role = ?", "Obi-wan Kenobi")
+        .fetch();
+      expect(obiwans.length).toBe(2);
+      obiwans.forEach((o) => {
+        expect(Object.keys(o)).toContain("rowid");
+      });
     });
   });
 });

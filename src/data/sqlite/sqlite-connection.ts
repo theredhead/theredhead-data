@@ -1,5 +1,9 @@
 /** @format */
 
+import { FetchRequest } from "./../../../dist/data/idbconnection.d";
+import { FetchRequestSQLWriter } from "./../idbconnection";
+/** @format */
+
 import {
   PartialRecord,
   AbstractDbConnection,
@@ -113,7 +117,7 @@ export class SqliteConnection extends AbstractDbConnection {
     return inserted;
   }
   async update<T extends Record>(table: string, record: Record): Promise<T> {
-    const id = record.id;
+    const id = record.rowid;
     const data: PartialRecord = { ...record };
     delete data.id;
     const quotedTableName = this.quoteObjectName(table);
@@ -137,5 +141,12 @@ export class SqliteConnection extends AbstractDbConnection {
       id,
     ]);
     return record;
+  }
+
+  async fetch<T extends Record>(request: FetchRequest): Promise<T[]> {
+    const writer = new FetchRequestSQLWriter();
+    writer.columns = "rowid, *";
+    const command = writer.write(request);
+    return await this.executeArray<T>(command.text, command.params);
   }
 }

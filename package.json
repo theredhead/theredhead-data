@@ -1,7 +1,7 @@
 {
   "name": "@theredhead/data",
   "version": "0.0.6",
-  "description": "Data Access primitives",
+  "description": "Easy Asynchronous Data Access for mysql and sqlite",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc -p .",
@@ -10,7 +10,7 @@
     "coverage": "nyc -r lcov -e .ts -x \"tests/*.test.ts\" npm run test",
     "coverage-cli": "nyc -r text -e .ts -x \"tests/*.test.ts\" npm run test"
   },
-  "keywords": [],
+  "keywords": ["data access", "database", "db", "query", "mysql", "mysql2", "sqlite", "sqlite3"],
   "author": "kris@theredhead.nl",
   "license": "WTFPL",
   "devDependencies": {
