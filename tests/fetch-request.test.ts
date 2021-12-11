@@ -1,11 +1,12 @@
 /** @format */
 
-import { FetchRequest } from "./../src/data/idbconnection";
-/** @format */
-
-import { PartialRecord, IDbConnection } from "../src/data/idbconnection";
-import { MySqlConnection } from "../src/data/mysql/mysql-connection";
-import { SqliteConnection } from "../src/data/sqlite/sqlite-connection";
+import {
+  FetchRequest,
+  PartialRecord,
+  IDbConnection,
+} from "../src/data/idbconnection";
+import { MySqlConnection } from "../src/data/mysql";
+import { SqliteConnection } from "../src/data/sqlite";
 
 const initialListOfActors = [
   {

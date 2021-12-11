@@ -1,9 +1,13 @@
 /** @format */
 
-import { PartialRecord, Record } from "./../src/data/idbconnection";
-import { IDbConnection } from "./../src/data/idbconnection";
-import { SqliteConnection } from "./../src/data/sqlite/sqlite-connection";
-import { MySqlConnection } from "./../src/data/mysql/mysql-connection";
+import {
+  PartialRecord,
+  Record,
+  IDbConnection,
+} from "./../src/data/idbconnection";
+import {} from "./../src/data/idbconnection";
+import { SqliteConnection } from "../src/data/sqlite";
+import { MySqlConnection } from "../src/data/mysql";
 
 const implementations: PartialRecord = {
   mysql: new MySqlConnection({

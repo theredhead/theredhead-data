@@ -1,6 +1,6 @@
 /** @format */
 
-import { MySqlConnection } from "./../src/data/mysql/mysql-connection";
+import { MySqlConnection } from "./../src/data/mysql";
 
 describe("MySqlConnection", () => {
   it("Throws when trying to connect to a non-existing server", async () => {
