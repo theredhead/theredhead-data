@@ -1,10 +1,8 @@
 /** @format */
 
-import { FetchRequest } from "./../../../dist/data/idbconnection.d";
-import { FetchRequestSQLWriter } from "./../idbconnection";
-/** @format */
-
 import {
+  FetchRequest,
+  FetchRequestSQLWriter,
   PartialRecord,
   AbstractDbConnection,
   DbParams,
